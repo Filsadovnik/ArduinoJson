@@ -5,16 +5,35 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 
-TEST_CASE("emptr filter") {
+TEST_CASE("Filtering") {
   DynamicJsonDocument filter(256);
   DynamicJsonDocument doc(256);
 
-  filter.set(false);
+  SECTION("empty") {
+    DeserializationError err =
+        deserializeJson(doc, "[1,2,3]", DeserializationOption::Filter(filter));
 
-  DeserializationError err =
-      deserializeJson(doc, "[1,2,3]", DeserializationOption::Filter(filter));
+    REQUIRE(err == DeserializationError::Ok);
+    REQUIRE(doc.isNull() == true);
+  }
 
-  REQUIRE(err == DeserializationError::Ok);
-  REQUIRE(doc.isNull() == true);
-  REQUIRE(doc.is<JsonArray>() == false);
+  SECTION("false") {
+    filter.set(false);
+
+    DeserializationError err =
+        deserializeJson(doc, "[1,2,3]", DeserializationOption::Filter(filter));
+
+    REQUIRE(err == DeserializationError::Ok);
+    REQUIRE(doc.isNull() == true);
+  }
+
+  SECTION("true") {
+    filter.set(true);
+
+    DeserializationError err =
+        deserializeJson(doc, "[1,2,3]", DeserializationOption::Filter(filter));
+
+    REQUIRE(err == DeserializationError::Ok);
+    REQUIRE(doc.as<std::string>() == "[1,2,3]");
+  }
 }

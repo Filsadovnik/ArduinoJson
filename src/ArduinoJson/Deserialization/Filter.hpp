@@ -9,9 +9,9 @@
 namespace ARDUINOJSON_NAMESPACE {
 
 struct Filter {
-  Filter(JsonDocument& d) : doc(d) {}
+  Filter(VariantConstRef d) : doc(d) {}
 
-  JsonDocument& doc;
+  VariantConstRef doc;
 };
 
 }  // namespace ARDUINOJSON_NAMESPACE
