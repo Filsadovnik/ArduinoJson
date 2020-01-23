@@ -127,9 +127,8 @@ class JsonDeserializer {
       case '[':
         return skipArray();
 
-        // TODO
-        /*      case '{':
-                return skipObject();*/
+      case '{':
+        return skipObject();
 
       case '\"':
       case '\'':
@@ -327,6 +326,52 @@ class JsonDeserializer {
       // Skip spaces
       err = skipSpacesAndComments();
       if (err) return err;
+    }
+  }
+
+  DeserializationError skipObject() {
+    // TODO
+    // if (_nestingLimit == 0) return DeserializationError::TooDeep;
+
+    // Check opening brace
+    if (!eat('{')) return DeserializationError::InvalidInput;
+
+    // TODO
+    // Skip spaces
+    // DeserializationError err = skipSpacesAndComments();
+    // if (err) return err;
+
+    // Empty object?
+    if (eat('}')) return DeserializationError::Ok;
+
+    // Read each key value pair
+    for (;;) {
+      // Skip key
+      /*err = */ skipVariant();
+      // if (err) return err; TODO
+
+      // Skip spaces
+      DeserializationError err = skipSpacesAndComments();
+      if (err) return err;  // Colon
+      if (!eat(':')) return DeserializationError::InvalidInput;
+
+      // Skip value
+      // _nestingLimit--; TODO
+      err = skipVariant();
+      // _nestingLimit++;
+      // if (err) return err; TODO
+
+      // Skip spaces
+      err = skipSpacesAndComments();
+      if (err) return err;
+
+      // More keys/values?
+      if (eat('}')) return DeserializationError::Ok;
+      if (!eat(',')) return DeserializationError::InvalidInput;
+
+      // // Skip spaces
+      // err = skipSpacesAndComments();
+      // if (err) return err;
     }
   }
 

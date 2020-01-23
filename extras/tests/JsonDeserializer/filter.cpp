@@ -68,13 +68,29 @@ TEST_CASE("Filtering") {
     }
 
     SECTION("can skip an empty array with spaces in it") {
-      checkJsonFilter("{\"an_empty_array\":[\t  ],answer:42}",
+      checkJsonFilter("{\"an_empty_array\":[\t],answer:42}",
                       "{\"answer\":true}", "{\"answer\":42}");
     }
 
     SECTION("can skip an array") {
       checkJsonFilter("{\"an_array\":[1,2,3],answer:42}", "{\"answer\":true}",
                       "{\"answer\":42}");
+    }
+
+    SECTION("can skip an empty object") {
+      checkJsonFilter("{\"an_empty_object\":{},answer:42}", "{\"answer\":true}",
+                      "{\"answer\":42}");
+    }
+
+    SECTION("can skip an object") {
+      checkJsonFilter("{\"an_empty_object\":{a:1,'b':2,\"c\":3},answer:42}",
+                      "{\"answer\":true}", "{\"answer\":42}");
+    }
+
+    SECTION("can skip an object with spaces in it") {
+      checkJsonFilter(
+          "{\"an_empty_object\" : { a : 1 , 'b' : 2 , \"c\" : 3 } ,answer:42}",
+          "{\"answer\":true}", "{\"answer\":42}");
     }
   }
 }
