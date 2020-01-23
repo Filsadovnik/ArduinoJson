@@ -40,18 +40,15 @@ class JsonDeserializer {
   }
 
   DeserializationError parse(VariantData &variant, VariantConstRef filter) {
-    if (filter) {
-      DeserializationError err = parseVariant(variant);
+    DeserializationError err = parseVariant(variant, filter);
 
-      if (!err && _current != 0 && !variant.isEnclosed()) {
-        // We don't detect trailing characters earlier, so we need to check now
-        err = DeserializationError::InvalidInput;
-      }
+    // TODO: restore
+    // if (!err && _current != 0 && !variant.isEnclosed()) {
+    //   // We don't detect trailing characters earlier, so we need to check now
+    //   err = DeserializationError::InvalidInput;
+    // }
 
-      return err;
-    } else {
-      return DeserializationError::Ok;
-    }
+    return err;
   }
 
  private:
@@ -86,6 +83,32 @@ class JsonDeserializer {
 
       case '{':
         return parseObject(variant.toObject());
+
+      case '\"':
+      case '\'':
+        return parseStringValue(variant);
+
+      default:
+        return parseNumericValue(variant);
+    }
+  }
+
+  DeserializationError parseVariant(VariantData &variant,
+                                    VariantConstRef filter) {
+    if (filter == true) return parseVariant(variant);
+
+    DeserializationError err = skipSpacesAndComments();
+    if (err) return err;
+
+    switch (current()) {
+      case '[':
+        return parseArray(variant.toArray());
+
+      case '{':
+        if (filter.is<ObjectRef>())
+          return parseObject(variant.toObject(), filter);
+        else
+          return DeserializationError::Ok;
 
       case '\"':
       case '\'':
@@ -150,6 +173,67 @@ class JsonDeserializer {
       const char *key;
       err = parseKey(key);
       if (err) return err;
+
+      VariantData *variant = object.get(adaptString(key));
+      if (!variant) {
+        // Allocate slot in object
+        VariantSlot *slot = object.addSlot(_pool);
+        if (!slot) return DeserializationError::NoMemory;
+
+        slot->setOwnedKey(make_not_null(key));
+
+        variant = slot->data();
+      }
+
+      // Skip spaces
+      err = skipSpacesAndComments();
+      if (err) return err;  // Colon
+      if (!eat(':')) return DeserializationError::InvalidInput;
+
+      // Parse value
+      _nestingLimit--;
+      err = parseVariant(*variant);
+      _nestingLimit++;
+      if (err) return err;
+
+      // Skip spaces
+      err = skipSpacesAndComments();
+      if (err) return err;
+
+      // More keys/values?
+      if (eat('}')) return DeserializationError::Ok;
+      if (!eat(',')) return DeserializationError::InvalidInput;
+
+      // Skip spaces
+      err = skipSpacesAndComments();
+      if (err) return err;
+    }
+  }
+
+  DeserializationError parseObject(CollectionData &object,
+                                   VariantConstRef filter) {
+    if (!filter.is<ObjectRef>()) return DeserializationError::Ok;
+
+    if (_nestingLimit == 0) return DeserializationError::TooDeep;
+
+    // Check opening brace
+    if (!eat('{')) return DeserializationError::InvalidInput;
+
+    // Skip spaces
+    DeserializationError err = skipSpacesAndComments();
+    if (err) return err;
+
+    // Empty object?
+    if (eat('}')) return DeserializationError::Ok;
+
+    // Read each key value pair
+    for (;;) {
+      // Parse key
+      const char *key;
+      err = parseKey(key);
+      if (err) return err;
+
+      if (!filter[key]) return DeserializationError::Ok;
 
       VariantData *variant = object.get(adaptString(key));
       if (!variant) {

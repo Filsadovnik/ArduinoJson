@@ -5,35 +5,37 @@
 #include <ArduinoJson.h>
 #include <catch.hpp>
 
+static void checkJsonFilter(std::string input, std::string filter_json,
+                            std::string expected_json) {
+  DynamicJsonDocument filter(256);
+  DynamicJsonDocument doc(256);
+
+  deserializeJson(filter, filter_json);
+
+  DeserializationError err = deserializeJson(
+      doc, input.c_str(), DeserializationOption::Filter(filter));
+
+  REQUIRE(err == DeserializationError::Ok);
+  REQUIRE(doc.as<std::string>() == expected_json);
+}
+
 TEST_CASE("Filtering") {
   DynamicJsonDocument filter(256);
   DynamicJsonDocument doc(256);
 
   SECTION("empty") {
-    DeserializationError err =
-        deserializeJson(doc, "[1,2,3]", DeserializationOption::Filter(filter));
-
-    REQUIRE(err == DeserializationError::Ok);
-    REQUIRE(doc.isNull() == true);
+    checkJsonFilter("{\"hello\":\"world\"}", "null", "null");
   }
 
   SECTION("false") {
-    filter.set(false);
-
-    DeserializationError err =
-        deserializeJson(doc, "[1,2,3]", DeserializationOption::Filter(filter));
-
-    REQUIRE(err == DeserializationError::Ok);
-    REQUIRE(doc.isNull() == true);
+    checkJsonFilter("{\"hello\":\"world\"}", "false", "null");
   }
 
   SECTION("true") {
-    filter.set(true);
+    checkJsonFilter("{\"hello\":\"world\"}", "true", "{\"hello\":\"world\"}");
+  }
 
-    DeserializationError err =
-        deserializeJson(doc, "[1,2,3]", DeserializationOption::Filter(filter));
-
-    REQUIRE(err == DeserializationError::Ok);
-    REQUIRE(doc.as<std::string>() == "[1,2,3]");
+  SECTION("{}") {
+    checkJsonFilter("{\"hello\":\"world\"}", "{}", "{}");
   }
 }
