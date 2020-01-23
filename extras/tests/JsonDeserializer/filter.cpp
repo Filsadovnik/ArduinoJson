@@ -93,4 +93,10 @@ TEST_CASE("Filtering") {
           "{\"answer\":true}", "{\"answer\":42}");
     }
   }
+
+  SECTION("{\"level1\":{\"level2\":true}}") {
+    checkJsonFilter(
+        "{\"an_integer\": 0,\"answer\":{\"type\":\"int\",\"value\":42}}",
+        "{\"answer\":{\"value\":true}}", "{\"answer\":{\"value\":42}}");
+  }
 }
