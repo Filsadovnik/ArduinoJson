@@ -68,7 +68,7 @@ DeserializationError deserialize(JsonDocument &doc, TStream &input,
 template <template <typename, typename> class TDeserializer, typename TString>
 typename enable_if<!is_array<TString>::value, DeserializationError>::type
 deserialize(JsonDocument &doc, const TString &input, NestingLimit nestingLimit,
-            VariantConstRef filter) {
+            Filter filter) {
   Reader<TString> reader(input);
   doc.clear();
   return makeDeserializer<TDeserializer>(
