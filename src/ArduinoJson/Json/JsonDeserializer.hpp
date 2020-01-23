@@ -119,6 +119,28 @@ class JsonDeserializer {
     }
   }
 
+  DeserializationError skipVariant() {
+    DeserializationError err = skipSpacesAndComments();
+    if (err) return err;
+
+    switch (current()) {
+        // TODO
+        // case '[':
+        //   return skipArray();
+
+        // TODO
+        // case '{':
+        //   return skipObject();
+
+      case '\"':
+        // case '\'': TODO
+        return skipString();
+
+      default:
+        return skipNumericValue();
+    }
+  }
+
   DeserializationError parseArray(CollectionData &array) {
     if (_nestingLimit == 0) return DeserializationError::TooDeep;
 
@@ -233,29 +255,35 @@ class JsonDeserializer {
       err = parseKey(key);
       if (err) return err;
 
-      if (!filter[key]) return DeserializationError::Ok;
-
-      VariantData *variant = object.get(adaptString(key));
-      if (!variant) {
-        // Allocate slot in object
-        VariantSlot *slot = object.addSlot(_pool);
-        if (!slot) return DeserializationError::NoMemory;
-
-        slot->setOwnedKey(make_not_null(key));
-
-        variant = slot->data();
-      }
-
+      // TODO: I moved this block, it may increase code size
       // Skip spaces
       err = skipSpacesAndComments();
       if (err) return err;  // Colon
       if (!eat(':')) return DeserializationError::InvalidInput;
 
-      // Parse value
-      _nestingLimit--;
-      err = parseVariant(*variant);
-      _nestingLimit++;
-      if (err) return err;
+      if (filter[key]) {
+        VariantData *variant = object.get(adaptString(key));
+        if (!variant) {
+          // Allocate slot in object
+          VariantSlot *slot = object.addSlot(_pool);
+          if (!slot) return DeserializationError::NoMemory;
+
+          slot->setOwnedKey(make_not_null(key));
+
+          variant = slot->data();
+        }
+
+        // Parse value
+        _nestingLimit--;
+        err = parseVariant(*variant);
+        _nestingLimit++;
+        if (err) return err;
+      } else {
+        // _nestingLimit--; TODO
+        err = skipVariant();
+        // _nestingLimit++; TODO
+        // if (err) return err; TODO
+      }
 
       // Skip spaces
       err = skipSpacesAndComments();
@@ -362,6 +390,25 @@ class JsonDeserializer {
     return DeserializationError::Ok;
   }
 
+  DeserializationError skipString() {
+    const char stopChar = current();
+
+    move();
+    for (;;) {
+      char c = current();
+      move();
+      if (c == stopChar) break;
+
+      // TODO
+      // if (c == '\0') return DeserializationError::IncompleteInput;
+
+      // TODO
+      // if (c == '\\') {
+    }
+
+    return DeserializationError::Ok;
+  }
+
   DeserializationError parseNumericValue(VariantData &result) {
     char buffer[64];
     uint8_t n = 0;
@@ -408,6 +455,15 @@ class JsonDeserializer {
     }
 
     return DeserializationError::InvalidInput;
+  }
+
+  DeserializationError skipNumericValue() {
+    char c = current();
+    while (canBeInNonQuotedString(c)) {
+      move();
+      c = current();
+    }
+    return DeserializationError::Ok;
   }
 
   DeserializationError parseHex4(uint16_t &result) {

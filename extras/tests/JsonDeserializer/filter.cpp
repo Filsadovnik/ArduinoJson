@@ -20,9 +20,6 @@ static void checkJsonFilter(std::string input, std::string filter_json,
 }
 
 TEST_CASE("Filtering") {
-  DynamicJsonDocument filter(256);
-  DynamicJsonDocument doc(256);
-
   SECTION("empty") {
     checkJsonFilter("{\"hello\":\"world\"}", "null", "null");
   }
@@ -37,5 +34,13 @@ TEST_CASE("Filtering") {
 
   SECTION("{}") {
     checkJsonFilter("{\"hello\":\"world\"}", "{}", "{}");
+  }
+
+  SECTION("{\"key\":true}") {
+    checkJsonFilter("{\"a\":1,\"b\":2,\"c\":3}", "{\"b\":true}", "{\"b\":2}");
+  }
+
+  SECTION("{\"key\":false}") {
+    checkJsonFilter("{\"a\":false}", "{\"a\":false}", "{}");
   }
 }
