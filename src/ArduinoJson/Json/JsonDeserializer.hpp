@@ -201,62 +201,6 @@ class JsonDeserializer {
     }
   }
 
-  DeserializationError parseObject(CollectionData &object) {
-    if (_nestingLimit == 0) return DeserializationError::TooDeep;
-
-    // Check opening brace
-    if (!eat('{')) return DeserializationError::InvalidInput;
-
-    // Skip spaces
-    DeserializationError err = skipSpacesAndComments();
-    if (err) return err;
-
-    // Empty object?
-    if (eat('}')) return DeserializationError::Ok;
-
-    // Read each key value pair
-    for (;;) {
-      // Parse key
-      const char *key;
-      err = parseKey(key);
-      if (err) return err;
-
-      VariantData *variant = object.get(adaptString(key));
-      if (!variant) {
-        // Allocate slot in object
-        VariantSlot *slot = object.addSlot(_pool);
-        if (!slot) return DeserializationError::NoMemory;
-
-        slot->setOwnedKey(make_not_null(key));
-
-        variant = slot->data();
-      }
-
-      // Skip spaces
-      err = skipSpacesAndComments();
-      if (err) return err;  // Colon
-      if (!eat(':')) return DeserializationError::InvalidInput;
-
-      // Parse value
-      _nestingLimit--;
-      err = parseVariant(*variant);
-      _nestingLimit++;
-      if (err) return err;
-
-      // Skip spaces
-      err = skipSpacesAndComments();
-      if (err) return err;
-
-      // More keys/values?
-      if (eat('}')) return DeserializationError::Ok;
-      if (!eat(',')) return DeserializationError::InvalidInput;
-
-      // Skip spaces
-      err = skipSpacesAndComments();
-      if (err) return err;
-    }
-  }
-
   template <typename TFilter>
   DeserializationError parseObject(CollectionData &object, TFilter filter) {
     if (_nestingLimit == 0) return DeserializationError::TooDeep;
