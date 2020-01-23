@@ -102,7 +102,7 @@ class JsonDeserializer {
 
     switch (current()) {
       case '[':
-        return parseArray(variant.toArray());
+        return parseArray(variant.toArray(), filter);
 
       case '{':
         if (filter.is<ObjectRef>())
@@ -163,6 +163,51 @@ class JsonDeserializer {
       err = parseVariant(*value);
       _nestingLimit++;
       if (err) return err;
+
+      // 2 - Skip spaces
+      err = skipSpacesAndComments();
+      if (err) return err;
+
+      // 3 - More values?
+      if (eat(']')) return DeserializationError::Ok;
+      if (!eat(',')) return DeserializationError::InvalidInput;
+    }
+  }
+
+  DeserializationError parseArray(CollectionData &array,
+                                  VariantConstRef filter) {
+    if (_nestingLimit == 0) return DeserializationError::TooDeep;
+
+    // Check opening braket
+    if (!eat('[')) return DeserializationError::InvalidInput;
+
+    // Skip spaces
+    DeserializationError err = skipSpacesAndComments();
+    if (err) return err;
+
+    // Empty array?
+    if (eat(']')) return DeserializationError::Ok;
+
+    // Read each value
+    for (int i = 0;; i++) {
+      VariantConstRef memberFilter = filter[i];
+
+      if (memberFilter) {
+        // Allocate slot in array
+        VariantData *value = array.add(_pool);
+        if (!value) return DeserializationError::NoMemory;
+
+        // 1 - Parse value
+        _nestingLimit--;
+        err = parseVariant(*value, memberFilter);
+        _nestingLimit++;
+        if (err) return err;
+      } else {
+        // _nestingLimit--;  TODO
+        err = skipVariant();
+        // _nestingLimit++;  TODO
+        // if (err) return err; TODO
+      }
 
       // 2 - Skip spaces
       err = skipSpacesAndComments();

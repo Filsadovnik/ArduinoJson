@@ -99,4 +99,12 @@ TEST_CASE("Filtering") {
         "{\"an_integer\": 0,\"answer\":{\"type\":\"int\",\"value\":42}}",
         "{\"answer\":{\"value\":true}}", "{\"answer\":{\"value\":42}}");
   }
+
+  SECTION("[false,true]") {
+    checkJsonFilter("[1,2,3]", "[false,true]", "[2]");
+  }
+
+  SECTION("[false,[false, true]]") {
+    checkJsonFilter("[1,[2.1,2.2,2.3],3]", "[false,[false, true]]", "[[2.2]]");
+  }
 }
