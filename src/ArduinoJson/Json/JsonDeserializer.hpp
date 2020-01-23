@@ -124,16 +124,15 @@ class JsonDeserializer {
     if (err) return err;
 
     switch (current()) {
-        // TODO
-        // case '[':
-        //   return skipArray();
+      case '[':
+        return skipArray();
 
         // TODO
-        // case '{':
-        //   return skipObject();
+        /*      case '{':
+                return skipObject();*/
 
       case '\"':
-        // case '\'': TODO
+      case '\'':
         return skipString();
 
       default:
@@ -169,6 +168,38 @@ class JsonDeserializer {
       // 2 - Skip spaces
       err = skipSpacesAndComments();
       if (err) return err;
+
+      // 3 - More values?
+      if (eat(']')) return DeserializationError::Ok;
+      if (!eat(',')) return DeserializationError::InvalidInput;
+    }
+  }
+
+  DeserializationError skipArray() {
+    if (_nestingLimit == 0) return DeserializationError::TooDeep;
+
+    // Check opening braket
+    if (!eat('[')) return DeserializationError::InvalidInput;
+
+    // TODO
+    // Skip spaces
+    // DeserializationError err = skipSpacesAndComments();
+    // if (err) return err;
+
+    // Empty array?
+    // if (eat(']')) return DeserializationError::Ok;  TODO: probably not needed
+
+    // Read each value
+    for (;;) {
+      // 1 - Parse value
+      // nestingLimit--; // TODO
+      /*err = */ skipVariant();
+      // _nestingLimit++; // TODO
+      // if (err) return err; // TODO
+
+      // 2 - Skip spaces
+      // err = skipSpacesAndComments();
+      // if (err) return err;
 
       // 3 - More values?
       if (eat(']')) return DeserializationError::Ok;

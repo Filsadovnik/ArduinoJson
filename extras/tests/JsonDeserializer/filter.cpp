@@ -37,10 +37,44 @@ TEST_CASE("Filtering") {
   }
 
   SECTION("{\"key\":true}") {
-    checkJsonFilter("{\"a\":1,\"b\":2,\"c\":3}", "{\"b\":true}", "{\"b\":2}");
-  }
+    SECTION("can skip an integer") {
+      checkJsonFilter("{\"an_integer\":666,answer:42}", "{\"answer\":true}",
+                      "{\"answer\":42}");
+    }
 
-  SECTION("{\"key\":false}") {
-    checkJsonFilter("{\"a\":false}", "{\"a\":false}", "{}");
+    SECTION("can skip a float") {
+      checkJsonFilter("{\"a_float\":12.34e-6,answer:42}", "{\"answer\":true}",
+                      "{\"answer\":42}");
+    }
+
+    SECTION("can skip a boolean") {
+      checkJsonFilter("{\"a_bool\":false,answer:42}", "{\"answer\":true}",
+                      "{\"answer\":42}");
+    }
+
+    SECTION("can skip a double-quoted string") {
+      checkJsonFilter("{\"a_double_quoted_string\":\"hello\",answer:42}",
+                      "{\"answer\":true}", "{\"answer\":42}");
+    }
+
+    SECTION("can skip a single-quoted string") {
+      checkJsonFilter("{\"a_single_quoted_string\":'hello',answer:42}",
+                      "{\"answer\":true}", "{\"answer\":42}");
+    }
+
+    SECTION("can skip an empty array") {
+      checkJsonFilter("{\"an_empty_array\":[],answer:42}", "{\"answer\":true}",
+                      "{\"answer\":42}");
+    }
+
+    SECTION("can skip an empty array with spaces in it") {
+      checkJsonFilter("{\"an_empty_array\":[\t  ],answer:42}",
+                      "{\"answer\":true}", "{\"answer\":42}");
+    }
+
+    SECTION("can skip an array") {
+      checkJsonFilter("{\"an_array\":[1,2,3],answer:42}", "{\"answer\":true}",
+                      "{\"answer\":42}");
+    }
   }
 }
