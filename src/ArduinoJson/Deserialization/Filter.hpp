@@ -32,14 +32,14 @@ class Filter {
   VariantConstRef _variant;
 };
 
-struct AlwaysYesVariant {
+struct AllowAllFilter {
   bool operator==(bool rhs) const {
     return rhs == true;
   }
 
   template <typename TKey>
-  AlwaysYesVariant operator[](const TKey&) const {
-    return AlwaysYesVariant();
+  AllowAllFilter operator[](const TKey&) const {
+    return AllowAllFilter();
   }
 
   operator bool() const {
