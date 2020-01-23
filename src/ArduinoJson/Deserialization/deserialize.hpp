@@ -5,6 +5,7 @@
 #pragma once
 
 #include <ArduinoJson/Deserialization/DeserializationError.hpp>
+#include <ArduinoJson/Deserialization/Filter.hpp>
 #include <ArduinoJson/Deserialization/NestingLimit.hpp>
 #include <ArduinoJson/Deserialization/Reader.hpp>
 #include <ArduinoJson/StringStorage/StringStorage.hpp>
@@ -61,5 +62,18 @@ DeserializationError deserialize(JsonDocument &doc, TStream &input,
              doc.memoryPool(), reader,
              makeStringStorage(doc.memoryPool(), input), nestingLimit.value)
       .parse(doc.data());
+}
+
+// TODO: cleanup
+template <template <typename, typename> class TDeserializer, typename TString>
+typename enable_if<!is_array<TString>::value, DeserializationError>::type
+deserialize(JsonDocument &doc, const TString &input, NestingLimit nestingLimit,
+            VariantConstRef filter) {
+  Reader<TString> reader(input);
+  doc.clear();
+  return makeDeserializer<TDeserializer>(
+             doc.memoryPool(), reader,
+             makeStringStorage(doc.memoryPool(), input), nestingLimit.value)
+      .parse(doc.data(), filter);
 }
 }  // namespace ARDUINOJSON_NAMESPACE
