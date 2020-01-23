@@ -12,20 +12,16 @@ class Filter {
  public:
   explicit Filter(VariantConstRef v) : _variant(v) {}
 
-  bool operator==(bool rhs) const {
-    return rhs == true;
+  bool allow() const {
+    return _variant;
   }
 
   template <typename TKey>
   Filter operator[](const TKey& key) const {
-    if (_variant == true)
-      return Filter(_variant);  // accept all children
+    if (_variant == true)  // "true" means "allow recursively"
+      return *this;
     else
       return Filter(_variant[key]);
-  }
-
-  operator bool() const {
-    return _variant;
   }
 
  private:
@@ -33,17 +29,13 @@ class Filter {
 };
 
 struct AllowAllFilter {
-  bool operator==(bool rhs) const {
-    return rhs == true;
+  bool allow() const {
+    return true;
   }
 
   template <typename TKey>
   AllowAllFilter operator[](const TKey&) const {
     return AllowAllFilter();
-  }
-
-  operator bool() const {
-    return true;
   }
 };
 
