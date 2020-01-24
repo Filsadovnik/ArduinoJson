@@ -66,4 +66,32 @@ inline typename enable_if<IsString<TString>::value,
   return MemberProxy<TObject, TString>(*impl(), key);
 }
 
+template <typename TObject>
+template <typename TString>
+inline typename enable_if<IsString<TString>::value, bool>::type
+ObjectConstShortcuts<TObject>::containsKey(const TString& key) const {
+  return !impl()->getMember(key).isUndefined();
+}
+
+template <typename TObject>
+template <typename TChar>
+inline typename enable_if<IsString<TChar*>::value, bool>::type
+ObjectConstShortcuts<TObject>::containsKey(TChar* key) const {
+  return !impl()->getMember(key).isUndefined();
+}
+
+template <typename TObject>
+template <typename TString>
+inline typename enable_if<IsString<TString*>::value, VariantConstRef>::type
+    ObjectConstShortcuts<TObject>::operator[](TString* key) const {
+  return impl()->getMember(key);
+}
+
+template <typename TObject>
+template <typename TString>
+inline typename enable_if<IsString<TString>::value, VariantConstRef>::type
+    ObjectConstShortcuts<TObject>::operator[](const TString& key) const {
+  return impl()->getMember(key);
+}
+
 }  // namespace ARDUINOJSON_NAMESPACE

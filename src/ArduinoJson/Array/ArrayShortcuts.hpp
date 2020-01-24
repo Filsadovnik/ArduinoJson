@@ -12,6 +12,9 @@ namespace ARDUINOJSON_NAMESPACE {
 template <typename>
 class ElementProxy;
 
+class ObjectRef;
+class ArrayRef;
+
 template <typename TArray>
 class ArrayShortcuts {
  public:

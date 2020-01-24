@@ -25,4 +25,9 @@ inline ElementProxy<TArray> ArrayShortcuts<TArray>::operator[](
   return ElementProxy<TArray>(*impl(), index);
 }
 
+template <typename TArray>
+inline VariantConstRef ArrayShortcuts<TArray>::operator[](size_t index) const {
+  return impl()->getElement(index);
+}
+
 }  // namespace ARDUINOJSON_NAMESPACE

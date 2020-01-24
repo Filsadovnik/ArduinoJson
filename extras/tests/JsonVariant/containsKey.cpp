@@ -26,3 +26,20 @@ TEST_CASE("JsonVariant::containsKey()") {
     REQUIRE(var.containsKey(std::string("world")) == false);
   }
 }
+
+TEST_CASE("JsonVariantConst::containsKey()") {
+  DynamicJsonDocument doc(4096);
+  JsonVariant var = doc.to<JsonVariant>();
+  var["hello"] = "world";
+  JsonVariantConst cvar = var;
+
+  SECTION("containsKey(const char*) returns true") {
+    REQUIRE(cvar.containsKey("hello") == true);
+    REQUIRE(cvar.containsKey("world") == false);
+  }
+
+  SECTION("containsKey(std::string) returns true") {
+    REQUIRE(cvar.containsKey(std::string("hello")) == true);
+    REQUIRE(cvar.containsKey(std::string("world")) == false);
+  }
+}

@@ -9,6 +9,8 @@
 
 #include <ArduinoJson/Memory/MemoryPool.hpp>
 #include <ArduinoJson/Misc/Visitable.hpp>
+#include <ArduinoJson/Object/ObjectConstShortcuts.hpp>
+#include <ArduinoJson/Operators/VariantConstShortcuts.hpp>
 #include <ArduinoJson/Operators/VariantOperators.hpp>
 #include <ArduinoJson/Polyfills/type_traits.hpp>
 #include <ArduinoJson/Variant/VariantAs.hpp>
@@ -347,7 +349,10 @@ class VariantRef : public VariantRefBase<VariantData>,
 };  // namespace ARDUINOJSON_NAMESPACE
 
 class VariantConstRef : public VariantRefBase<const VariantData>,
-                        public VariantOperators<VariantConstRef>,
+                        public VariantCasts<VariantConstRef>,
+                        public VariantComparisons<VariantConstRef>,
+                        public VariantOr<VariantConstRef>,
+                        public VariantConstShortcuts<VariantConstRef>,
                         public Visitable {
   typedef VariantRefBase<const VariantData> base_type;
   friend class VariantRef;
@@ -369,27 +374,39 @@ class VariantConstRef : public VariantRefBase<const VariantData>,
     return variantAs<typename VariantConstAs<T>::type>(_data);
   }
 
-  FORCE_INLINE VariantConstRef operator[](size_t index) const;
+  FORCE_INLINE VariantConstRef getElement(size_t) const;
 
-  // operator[](const std::string&) const
-  // operator[](const String&) const
+  // getMember(const char*) const
+  // getMember(const __FlashStringHelper*) const
+  template <typename TChar>
+  FORCE_INLINE VariantConstRef getMember(TChar *) const;
+
+  // getMember(const std::string&) const
+  // getMember(const String&) const
   template <typename TString>
   FORCE_INLINE
       typename enable_if<IsString<TString>::value, VariantConstRef>::type
-      operator[](const TString &key) const {
-    return VariantConstRef(objectGet(variantAsObject(_data), adaptString(key)));
-  }
+      getMember(const TString &) const;
 
-  // operator[](char*) const
-  // operator[](const char*) const
-  // operator[](const __FlashStringHelper*) const
-  template <typename TChar>
-  FORCE_INLINE
-      typename enable_if<IsString<TChar *>::value, VariantConstRef>::type
-      operator[](TChar *key) const {
-    const CollectionData *obj = variantAsObject(_data);
-    return VariantConstRef(obj ? obj->get(adaptString(key)) : 0);
-  }
+  // FORCE_INLINE VariantConstRef operator[](size_t index) const;
+
+  // operator[](const std::string &) const operator[](const String &) const
+  //     template <typename TString>
+  //     FORCE_INLINE
+  //     typename enable_if<IsString<TString>::value, VariantConstRef>::type
+  //     operator[](const TString &key) const {
+  //   return VariantConstRef(objectGet(variantAsObject(_data),
+  //   adaptString(key)));
+  // }
+
+  // operator[](char *) const operator[](const char *) const operator[](
+  //     const __FlashStringHelper *) const template <typename TChar>
+  // FORCE_INLINE
+  //     typename enable_if<IsString<TChar *>::value, VariantConstRef>::type
+  //     operator[](TChar *key) const {
+  //   const CollectionData *obj = variantAsObject(_data);
+  //   return VariantConstRef(obj ? obj->get(adaptString(key)) : 0);
+  // }
 
   FORCE_INLINE bool operator==(VariantConstRef lhs) const {
     return variantEquals(_data, lhs._data);
