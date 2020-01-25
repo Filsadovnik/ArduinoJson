@@ -149,7 +149,7 @@ class JsonDeserializer {
         // _nestingLimit--;  TODO
         err = skipVariant();
         // _nestingLimit++;  TODO
-        // if (err) return err; TODO
+        if (err) return err;
       }
 
       // 2 - Skip spaces
@@ -268,10 +268,9 @@ class JsonDeserializer {
     // Check opening brace
     if (!eat('{')) return DeserializationError::InvalidInput;
 
-    // TODO
     // Skip spaces
-    // DeserializationError err = skipSpacesAndComments();
-    // if (err) return err;
+    DeserializationError err = skipSpacesAndComments();
+    if (err) return err;
 
     // Empty object?
     if (eat('}')) return DeserializationError::Ok;
@@ -283,7 +282,7 @@ class JsonDeserializer {
       // if (err) return err; TODO
 
       // Skip spaces
-      DeserializationError err = skipSpacesAndComments();
+      err = skipSpacesAndComments();
       if (err) return err;  // Colon
       if (!eat(':')) return DeserializationError::InvalidInput;
 
@@ -406,12 +405,8 @@ class JsonDeserializer {
       char c = current();
       move();
       if (c == stopChar) break;
-
-      // TODO
-      // if (c == '\0') return DeserializationError::IncompleteInput;
-
-      // TODO
-      // if (c == '\\') {
+      if (c == '\0') return DeserializationError::IncompleteInput;
+      if (c == '\\') _reader.read();
     }
 
     return DeserializationError::Ok;
